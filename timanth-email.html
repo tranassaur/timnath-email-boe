@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Email the Board — Save Timnath Elementary</title>
+<style>
+  :root {
+    --navy: #101a33;
+    --navy-deep: #0a0f20;
+    --gold: #e9a82f;
+    --gold-soft: #f0c778;
+    --cream: #faf6eb;
+    --rust: #c4452a;
+    --line: #2e3a58;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: linear-gradient(180deg, var(--navy) 0%, var(--navy-deep) 100%);
+    color: var(--cream);
+    min-height: 100vh;
+    padding: 32px 16px 60px;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; }
+  .eyebrow {
+    color: var(--gold);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    font-size: 13px;
+    text-transform: uppercase;
+    border-bottom: 2px solid var(--gold);
+    display: inline-block;
+    padding-bottom: 8px;
+    margin-bottom: 18px;
+  }
+  h1 {
+    font-size: 34px;
+    line-height: 1.15;
+    margin: 0 0 6px;
+  }
+  h1 span { color: var(--gold); }
+  .sub {
+    color: var(--gold-soft);
+    font-style: italic;
+    font-weight: 600;
+    margin: 0 0 28px;
+    font-size: 17px;
+  }
+  .card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  label {
+    display: block;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--gold);
+    margin-bottom: 6px;
+    margin-top: 18px;
+  }
+  label:first-child { margin-top: 0; }
+  input[type="text"], input[type="email"], textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: var(--navy-deep);
+    color: var(--cream);
+    font-size: 15px;
+    font-family: inherit;
+  }
+  textarea { min-height: 130px; resize: vertical; line-height: 1.5; }
+  .hint {
+    font-size: 13px;
+    color: #a8b0c2;
+    margin-top: 6px;
+  }
+  button {
+    width: 100%;
+    margin-top: 24px;
+    padding: 16px;
+    border-radius: 12px;
+    border: none;
+    background: var(--rust);
+    color: var(--cream);
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+  }
+  button:hover { background: #a8391f; }
+  .note {
+    font-size: 13px;
+    color: #a8b0c2;
+    text-align: center;
+    margin-top: 14px;
+    line-height: 1.5;
+  }
+  .footer {
+    text-align: center;
+    margin-top: 28px;
+    font-size: 13px;
+    color: var(--gold-soft);
+    font-weight: 700;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="eyebrow">Timnath Cubs &middot; Community Alert</div>
+    <h1>Save Timnath <span>Elementary</span></h1>
+    <p class="sub">Send your own email to the Board in under a minute.</p>
+
+    <div class="card">
+      <label for="name">Your name</label>
+      <input type="text" id="name" placeholder="Jamie Rivera">
+
+      <label for="email">Your email</label>
+      <input type="email" id="email" placeholder="you@example.com">
+      <div class="hint">Used so the Board can reply directly to you, and so the Timnath PTO can keep a count of how many families took action. Your name and email are only used for that internal tracking — they're never shared or used for anything else.</div>
+
+      <label for="message">Why Timnath matters to your family (optional)</label>
+      <textarea id="message" placeholder="e.g. My daughter is in 2nd grade at Timnath and has thrived with her teachers and friends there..."></textarea>
+      <div class="hint">Leave this blank and we'll just include the key facts below.</div>
+
+      <button onclick="sendEmail()">Open Email to the Board →</button>
+      <div class="note">This opens your own email app with everything pre-filled.<br>You review it and hit send yourself — nothing is sent automatically.</div>
+    </div>
+
+    <div class="footer">#SaveTimnathElementary</div>
+  </div>
+
+  <!-- Hidden iframe target so the tracking submission never navigates the page away -->
+  <iframe name="tracking_frame" style="display:none;"></iframe>
+
+  <!-- Hidden form that silently logs a row to the Google Form (for PTO participation counting only) -->
+  <form id="trackingForm" method="POST"
+        action="https://docs.google.com/forms/d/e/1FAIpQLSfbEM8cmzID2MdKgYWqhrebrBQI9x-UTbFED3d8Vg61uGFghA/formResponse"
+        target="tracking_frame" style="display:none;">
+    <input type="text" name="entry.151921472" id="track_name">
+    <input type="text" name="entry.1798933659" id="track_email">
+    <input type="text" name="entry.347689247" id="track_message">
+  </form>
+
+<script>
+function logParticipation(name, email, message) {
+  document.getElementById('track_name').value = name;
+  document.getElementById('track_email').value = email;
+  document.getElementById('track_message').value = message;
+  document.getElementById('trackingForm').submit();
+}
+
+function sendEmail() {
+  const name = document.getElementById('name').value.trim() || "[Your name]";
+  const email = document.getElementById('email').value.trim();
+  const personal = document.getElementById('message').value.trim();
+
+  const subject = "Please Keep Timnath Elementary Open";
+
+  let body = "Dear Board of Education members,\n\n";
+  body += "My name is " + name + ", and I'm a parent at Timnath Elementary. I'm writing to ask you to look at our actual numbers before any consolidation decision is made.\n\n";
+  body += "Timnath Elementary is currently at 76 to 95% building utilization, well above the 60 to 70% range the Board has previously used as a starting point for consolidation discussions. Enrollment has stayed stable for a decade, and Timnath itself is one of the fastest-growing towns in the region, with population up nearly 87% since 2020.\n\n";
+  if (personal) {
+    body += personal + "\n\n";
+  }
+  body += "If the district believes some change is unavoidable, I'd ask that any transition take the form of a gradual phase-out for currently enrolled students, rather than an abrupt closure.\n\n";
+  body += "Thank you for considering Timnath families.\n\nSincerely,\n" + name;
+
+  const mailto = "mailto:boe@psdschools.org"
+    + (email ? "?cc=" + encodeURIComponent(email) + "&" : "?")
+    + "subject=" + encodeURIComponent(subject)
+    + "&body=" + encodeURIComponent(body);
+
+  // Log the click for PTO tracking, then open the person's email app
+  logParticipation(name, email, personal);
+  window.location.href = mailto;
+}
+</script>
+</body>
+</html>
