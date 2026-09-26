@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Email the Board — Save Timnath Elementary</title>
+<title>Email the Board: Keep Timnath Elementary Open</title>
 <style>
   :root {
     --navy: #101a33;
@@ -94,6 +94,7 @@
     cursor: pointer;
   }
   button:hover { background: #a8391f; }
+  button:focus-visible, a:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
   .note {
     font-size: 13px;
     color: #a8b0c2;
@@ -101,6 +102,24 @@
     margin-top: 14px;
     line-height: 1.5;
   }
+  .fallback {
+    margin-top: 20px;
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+    text-align: center;
+  }
+  .fallback p { margin: 0 0 10px; font-size: 15px; }
+  .fallback button.secondary {
+    margin-top: 4px;
+    background: transparent;
+    border: 2px solid var(--gold);
+    color: var(--gold);
+    font-size: 16px;
+  }
+  .fallback button.secondary:hover { background: rgba(233,168,47,0.12); }
+  .fallback .links { margin-top: 14px; font-size: 14px; }
+  .fallback a { color: var(--gold-soft); font-weight: 700; }
+  #copyMsg { margin-top: 12px; font-size: 14px; color: var(--gold-soft); min-height: 1em; }
   .footer {
     text-align: center;
     margin-top: 28px;
@@ -113,32 +132,43 @@
 <body>
   <div class="wrap">
     <div class="eyebrow">Timnath Cubs &middot; Community Alert</div>
-    <h1>Save Timnath <span>Elementary</span></h1>
+    <h1>Keep Timnath <span>Elementary</span> Open</h1>
     <p class="sub">Send your own email to the Board in under a minute.</p>
 
     <div class="card">
       <label for="name">Your name</label>
-      <input type="text" id="name" placeholder="Jamie Rivera">
+      <input type="text" id="name" placeholder="Jamie Rivera" autocomplete="name">
 
       <label for="email">Your email</label>
-      <input type="email" id="email" placeholder="you@example.com">
-      <div class="hint">Used so the Board can reply directly to you, and so the Timnath PTO can keep a count of how many families took action. Your name and email are only used for that internal tracking — they're never shared or used for anything else.</div>
+      <input type="email" id="email" placeholder="you@example.com" autocomplete="email">
+      <div class="hint">Used so the Board can reply directly to you, and so we can keep a count of how many families took action. Your name and email are only used for that count. They're never shared or used for anything else.</div>
 
       <label for="message">Why Timnath matters to your family (optional)</label>
       <textarea id="message" placeholder="e.g. My daughter is in 2nd grade at Timnath and has thrived with her teachers and friends there..."></textarea>
-      <div class="hint">Leave this blank and we'll just include the key facts below.</div>
+      <div class="hint">Leave this blank and we'll just include the key facts.</div>
 
-      <button onclick="sendEmail()">Open Email to the Board →</button>
-      <div class="note">This opens your own email app with everything pre-filled.<br>You review it and hit send yourself — nothing is sent automatically.</div>
+      <button type="button" onclick="sendEmail()">Open Email to the Board</button>
+      <div class="note">This opens your own email app with everything pre-filled.<br>You review it and hit send yourself. Nothing is sent automatically.</div>
+
+      <div id="fallback" class="fallback" hidden>
+        <p>Email app didn't open? Copy the email and paste it into any email app.</p>
+        <button type="button" class="secondary" onclick="copyEmail()">Copy the email</button>
+        <div id="copyMsg" aria-live="polite"></div>
+        <div class="links">
+          On a computer:
+          <a id="gmailLink" target="_blank" rel="noopener">Open in Gmail</a> &nbsp;|&nbsp;
+          <a id="outlookLink" target="_blank" rel="noopener">Open in Outlook.com</a>
+        </div>
+      </div>
     </div>
 
-    <div class="footer">#SaveTimnathElementary</div>
+    <div class="footer">#KeepTimnathOpen</div>
   </div>
 
   <!-- Hidden iframe target so the tracking submission never navigates the page away -->
   <iframe name="tracking_frame" style="display:none;"></iframe>
 
-  <!-- Hidden form that silently logs a row to the Google Form (for PTO participation counting only) -->
+  <!-- Hidden form that silently logs a row to the Google Form (participation count only) -->
   <form id="trackingForm" method="POST"
         action="https://docs.google.com/forms/d/e/1FAIpQLSfbEM8cmzID2MdKgYWqhrebrBQI9x-UTbFED3d8Vg61uGFghA/formResponse"
         target="tracking_frame" style="display:none;">
@@ -148,37 +178,107 @@
   </form>
 
 <script>
+var TO = "boe@psdschools.org";
+var lastEmail = null;
+
 function logParticipation(name, email, message) {
-  document.getElementById('track_name').value = name;
-  document.getElementById('track_email').value = email;
-  document.getElementById('track_message').value = message;
-  document.getElementById('trackingForm').submit();
+  try {
+    document.getElementById('track_name').value = name;
+    document.getElementById('track_email').value = email;
+    document.getElementById('track_message').value = message;
+    document.getElementById('trackingForm').submit();
+  } catch (e) {
+    // Tracking should never stop the email from opening
+  }
 }
 
 function sendEmail() {
-  const name = document.getElementById('name').value.trim() || "[Your name]";
-  const email = document.getElementById('email').value.trim();
-  const personal = document.getElementById('message').value.trim();
+  var name = document.getElementById('name').value.trim() || "[Your name]";
+  var email = document.getElementById('email').value.trim();
+  var personal = document.getElementById('message').value.trim();
 
-  const subject = "Please Keep Timnath Elementary Open";
+  var subject = "Timnath Elementary closure recommendation";
 
-  let body = "Dear Board of Education members,\n\n";
-  body += "My name is " + name + ", and I'm a parent at Timnath Elementary. I'm writing to ask you to look at our actual numbers before any consolidation decision is made.\n\n";
-  body += "Timnath Elementary is currently at 76 to 95% building utilization, well above the 60 to 70% range the Board has previously used as a starting point for consolidation discussions. Enrollment has stayed stable for a decade, and Timnath itself is one of the fastest-growing towns in the region, with population up nearly 87% since 2020.\n\n";
+  var body = "Dear Board of Education members,\n\n";
+  body += "My name is " + name + ", and I'm a Timnath Elementary parent. I'm writing about the Comprehensive Planning Committee's recommendation to close Timnath Elementary.\n\n";
+  body += "Timnath is 95% full, and the district projects our enrollment to hold steady while the area grows. Under this plan, nearly all of our roughly 400 students would ride the bus about 12 minutes longer each way, from 19 minutes to 31 on average and up to 50. The projected savings of $750,000 is the smallest of any elementary closure.\n\n";
   if (personal) {
     body += personal + "\n\n";
   }
-  body += "If the district believes some change is unavoidable, I'd ask that any transition take the form of a gradual phase-out for currently enrolled students, rather than an abrupt closure.\n\n";
-  body += "Thank you for considering Timnath families.\n\nSincerely,\n" + name;
+  body += "Before the October 27 vote, I ask the Board to:\n";
+  body += "1. Share the alternative scenarios the committee considered for our region, with their savings and ride times, as the executive summary does for other regions.\n";
+  body += "2. Compare the cost of accessibility upgrades or a rebuild with the cost of years of longer bus routes.\n";
+  body += "3. If closure goes ahead, let current students finish at Timnath.\n\n";
+  body += "Thank you for your service and for considering Timnath families.\n\nSincerely,\n" + name;
 
-  const mailto = "mailto:boe@psdschools.org"
+  lastEmail = { subject: subject, body: body, cc: email };
+
+  var s = encodeURIComponent(subject);
+  var b = encodeURIComponent(body);
+
+  var mailto = "mailto:" + TO
     + (email ? "?cc=" + encodeURIComponent(email) + "&" : "?")
-    + "subject=" + encodeURIComponent(subject)
-    + "&body=" + encodeURIComponent(body);
+    + "subject=" + s
+    + "&body=" + b;
 
-  // Log the click for PTO tracking, then open the person's email app
-  logParticipation(name, email, personal);
+  document.getElementById('gmailLink').href =
+    "https://mail.google.com/mail/?view=cm&fs=1&to=" + TO
+    + (email ? "&cc=" + encodeURIComponent(email) : "")
+    + "&su=" + s + "&body=" + b;
+  document.getElementById('outlookLink').href =
+    "https://outlook.live.com/mail/0/deeplink/compose?to=" + TO
+    + (email ? "&cc=" + encodeURIComponent(email) : "")
+    + "&subject=" + s + "&body=" + b;
+
+  // Open the email app first, right on the tap, so Safari doesn't block it
   window.location.href = mailto;
+
+  // Then log the click for the participation count
+  logParticipation(name, email, personal);
+
+  // Show backup options in case no email app opened
+  setTimeout(function () {
+    document.getElementById('fallback').hidden = false;
+  }, 1500);
+}
+
+function copyEmail() {
+  if (!lastEmail) return;
+  var text = "To: " + TO + "\n"
+    + (lastEmail.cc ? "CC: " + lastEmail.cc + "\n" : "")
+    + "Subject: " + lastEmail.subject + "\n\n"
+    + lastEmail.body;
+  var msg = document.getElementById('copyMsg');
+
+  function done() {
+    msg.textContent = "Copied! Open any email app, start a new message to " + TO + ", and paste.";
+  }
+  function fail() {
+    msg.textContent = "Couldn't copy automatically. Please email " + TO + " directly.";
+  }
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done, function () {
+      legacyCopy(text) ? done() : fail();
+    });
+  } else {
+    legacyCopy(text) ? done() : fail();
+  }
+}
+
+function legacyCopy(text) {
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  ta.setAttribute('readonly', '');
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  ta.setSelectionRange(0, text.length);
+  var ok = false;
+  try { ok = document.execCommand('copy'); } catch (e) {}
+  document.body.removeChild(ta);
+  return ok;
 }
 </script>
 </body>
