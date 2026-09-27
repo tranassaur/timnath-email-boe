@@ -75,6 +75,24 @@
     font-family: inherit;
   }
   textarea { min-height: 130px; resize: vertical; line-height: 1.5; }
+  fieldset.checklist { border: none; margin: 18px 0 0; padding: 0; }
+  fieldset.checklist legend {
+    font-weight: 700; font-size: 14px; color: var(--gold);
+    margin-bottom: 8px; padding: 0;
+  }
+  label.check {
+    display: flex; align-items: flex-start; gap: 12px;
+    font-weight: 400; font-size: 15px; color: var(--cream);
+    margin: 0; padding: 10px 12px; border-radius: 10px;
+    border: 1px solid var(--line); background: var(--navy-deep);
+    cursor: pointer; line-height: 1.4;
+  }
+  label.check + label.check { margin-top: 8px; }
+  label.check input {
+    width: 20px; height: 20px; flex: 0 0 auto; margin: 1px 0 0;
+    accent-color: var(--gold); cursor: pointer;
+  }
+  label.check:has(input:checked) { border-color: var(--gold); }
   .hint {
     font-size: 13px;
     color: #a8b0c2;
@@ -143,6 +161,18 @@
       <input type="email" id="email" placeholder="you@example.com" autocomplete="email">
       <div class="hint">Used so the Board can reply directly to you, and so we can keep a count of how many families took action. Your name and email are only used for that count. They're never shared or used for anything else.</div>
 
+      <fieldset class="checklist">
+        <legend>Check any that fit your family (optional)</legend>
+        <label class="check"><input type="checkbox" name="reason" value="We walk to school together, and Timnath Elementary is part of our daily routine."> We walk to school with our kids</label>
+        <label class="check"><input type="checkbox" name="reason" value="We bike to school together, which would not be possible with a school outside of town."> We bike to school with our kids</label>
+        <label class="check"><input type="checkbox" name="reason" value="We moved to Timnath so our kids could attend Timnath Elementary."> We moved to Timnath to attend Timnath Elementary</label>
+        <label class="check"><input type="checkbox" name="reason" value="Our kids go to school with their neighbors and friends from town."> Our kids go to school with neighbors and friends</label>
+        <label class="check"><input type="checkbox" name="reason" value="We have younger children who plan to attend Timnath Elementary."> We have younger kids planning to attend</label>
+        <label class="check"><input type="checkbox" name="reason" value="We attend the events Timnath Elementary puts on, and they give our kids a real sense of belonging in this community."> School events give our kids a sense of belonging</label>
+        <label class="check"><input type="checkbox" name="reason" value="I volunteer at Timnath Elementary and support the PTO."> I volunteer at the school or with the PTO</label>
+      </fieldset>
+      <div class="hint">Each box you check adds a sentence to your email.</div>
+
       <label for="message">Why Timnath matters to your family (optional)</label>
       <textarea id="message" placeholder="e.g. My daughter is in 2nd grade at Timnath and has thrived with her teachers and friends there..."></textarea>
       <div class="hint">Leave this blank and we'll just include the key facts.</div>
@@ -192,6 +222,13 @@ function logParticipation(name, email, message) {
   }
 }
 
+function getReasons() {
+  var boxes = document.querySelectorAll('input[name="reason"]:checked');
+  var out = [];
+  for (var i = 0; i < boxes.length; i++) out.push(boxes[i].value);
+  return out;
+}
+
 function sendEmail() {
   var name = document.getElementById('name').value.trim() || "[Your name]";
   var email = document.getElementById('email').value.trim();
@@ -202,6 +239,10 @@ function sendEmail() {
   var body = "Dear Board of Education members,\n\n";
   body += "My name is " + name + ", and I'm a Timnath Elementary parent. I'm writing about the Comprehensive Planning Committee's recommendation to close Timnath Elementary.\n\n";
   body += "Timnath is 95% full, and the district projects our enrollment to hold steady while the area grows. Under this plan, nearly all of our roughly 400 students would ride the bus about 12 minutes longer each way, from 19 minutes to 31 on average and up to 50. The projected savings of $750,000 is the smallest of any elementary closure.\n\n";
+  var reasons = getReasons();
+  if (reasons.length) {
+    body += reasons.join(" ") + "\n\n";
+  }
   if (personal) {
     body += personal + "\n\n";
   }
@@ -234,7 +275,9 @@ function sendEmail() {
   window.location.href = mailto;
 
   // Then log the click for the participation count
-  logParticipation(name, email, personal);
+  // Checked items are logged with the message so the count shows which reasons families picked
+  var trackMsg = reasons.length ? "[Checked] " + reasons.join(" | ") + (personal ? "\n\n" + personal : "") : personal;
+  logParticipation(name, email, trackMsg);
 
   // Show backup options in case no email app opened
   setTimeout(function () {
