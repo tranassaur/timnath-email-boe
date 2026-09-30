@@ -75,6 +75,13 @@
     font-family: inherit;
   }
   textarea { min-height: 130px; resize: vertical; line-height: 1.5; }
+  .recipients {
+    font-size: 14px; line-height: 1.5; color: var(--cream);
+    padding: 12px 14px; margin-bottom: 18px;
+    border-left: 3px solid var(--gold); border-radius: 6px;
+    background: var(--navy-deep);
+  }
+  .recipients strong { color: var(--gold); }
   fieldset.checklist { border: none; margin: 18px 0 0; padding: 0; }
   fieldset.checklist legend {
     font-weight: 700; font-size: 14px; color: var(--gold);
@@ -154,6 +161,8 @@
     <p class="sub">Send your own email to the Board in under a minute.</p>
 
     <div class="card">
+      <div class="recipients"><strong>Who gets your email:</strong> the full Board of Education (boe@psdschools.org) and each director: Scott Schoenbauer, Kevin Havelda, Karla Baise, Dr. Coronda Ziegler, Dr. Andrew Spain, Dr. Ozlem Gurkan, and Jessica Zamora. It also goes to Superintendent Brian Kingsley, whose office made the closure recommendation.</div>
+
       <label for="name">Your name</label>
       <input type="text" id="name" placeholder="Jamie Rivera" autocomplete="name">
 
@@ -208,7 +217,19 @@
   </form>
 
 <script>
-var TO = "boe@psdschools.org";
+// Board-wide address plus each director individually (from psdschools.org "Meet the Board", Sept 2026)
+var TO = [
+  "boe@psdschools.org",
+  "sschoenbauer@psdschools.org", // Scott Schoenbauer, District A
+  "khavelda@psdschools.org",     // Kevin Havelda, District B (Vice-President)
+  "kbaise@psdschools.org",       // Karla Baise, District C
+  "cziegler@psdschools.org",     // Dr. Coronda Ziegler, District D
+  "aspain@psdschools.org",       // Dr. Andrew Spain, District E
+  "ogurkan@psdschools.org",      // Dr. Ozlem Gurkan, District F
+  "jzamora@psdschools.org",      // Jessica Zamora, District G (President)
+  "bkingsley@psdschools.org"     // Brian Kingsley, Superintendent
+].join(",");
+var TO_ENC = encodeURIComponent(TO);
 var lastEmail = null;
 
 function logParticipation(name, email, message) {
@@ -263,11 +284,11 @@ function sendEmail() {
     + "&body=" + b;
 
   document.getElementById('gmailLink').href =
-    "https://mail.google.com/mail/?view=cm&fs=1&to=" + TO
+    "https://mail.google.com/mail/?view=cm&fs=1&to=" + TO_ENC
     + (email ? "&cc=" + encodeURIComponent(email) : "")
     + "&su=" + s + "&body=" + b;
   document.getElementById('outlookLink').href =
-    "https://outlook.live.com/mail/0/deeplink/compose?to=" + TO
+    "https://outlook.live.com/mail/0/deeplink/compose?to=" + TO_ENC
     + (email ? "&cc=" + encodeURIComponent(email) : "")
     + "&subject=" + s + "&body=" + b;
 
@@ -294,10 +315,10 @@ function copyEmail() {
   var msg = document.getElementById('copyMsg');
 
   function done() {
-    msg.textContent = "Copied! Open any email app, start a new message to " + TO + ", and paste.";
+    msg.textContent = "Copied! Open any email app, paste the addresses from the To line into the To field, then paste the rest.";
   }
   function fail() {
-    msg.textContent = "Couldn't copy automatically. Please email " + TO + " directly.";
+    msg.textContent = "Couldn't copy automatically. Please email boe@psdschools.org directly.";
   }
 
   if (navigator.clipboard && navigator.clipboard.writeText) {
